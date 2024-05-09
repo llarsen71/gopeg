@@ -34,20 +34,41 @@ type Pattern interface {
 
 //==============================================================================
 
-type Nchars struct {
+type StringPattern struct {
+	str string
+}
+
+func (P StringPattern) Match(str string, index int) Match {
+	// Index is out of bounds of the string
+	if index < 0 || len(str) < index {
+		return nil
+	}
+
+	sz := len(P.str)
+	left := len(str) - index
+	if left < sz || str[index:index+sz] != P.str {
+		return nil
+	}
+
+	return IMatch{str, index, index + sz}
+}
+
+//==============================================================================
+
+type IntPattern struct {
 	nchrs int
 }
 
-func (P Nchars) Match(str string, index int) Match {
+func (P IntPattern) Match(str string, index int) Match {
+	// Index is out of bounds of the string
+	if index < 0 || len(str) < index {
+		return nil
+	}
+
 	isLessThanN := P.nchrs < 0
 	n := abs(P.nchrs)
 	if isLessThanN {
 		n = n - 1
-	}
-
-	// Index is out of bounds of the string
-	if index < 0 || len(str) < index {
-		return nil
 	}
 
 	nchr := len(str) - index
@@ -62,8 +83,39 @@ func (P Nchars) Match(str string, index int) Match {
 	return IMatch{str, index, index + P.nchrs}
 }
 
-func P(n int) Pattern {
-	return Nchars{n}
+//==============================================================================
+
+type BoolPattern struct {
+	isTrue bool
+}
+
+func (P BoolPattern) Match(str string, index int) Match {
+	// Index is out of bounds of the string
+	if index < 0 || len(str) < index {
+		return nil
+	}
+	if !P.isTrue {
+		return nil
+	}
+
+	return IMatch{str, index, index}
+}
+
+//==============================================================================
+type Union interface {
+}
+
+func P(val Union) Pattern {
+	switch v := val.(type) {
+	case int:
+		return IntPattern{v}
+	case bool:
+		return BoolPattern{v}
+	case string:
+		return StringPattern{v}
+	default:
+		return nil
+	}
 }
 
 //==============================================================================
