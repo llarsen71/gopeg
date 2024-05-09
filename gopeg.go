@@ -39,12 +39,45 @@ type Nchars struct {
 }
 
 func (P Nchars) Match(str string, index int) Match {
-	if index < 0 || len(str)-1 < index+P.nchrs {
+	isLessThanN := P.nchrs < 0
+	n := abs(P.nchrs)
+	if isLessThanN {
+		n = n - 1
+	}
+
+	// Index is out of bounds of the string
+	if index < 0 || len(str) < index {
 		return nil
 	}
+
+	nchr := len(str) - index
+	if (isLessThanN && nchr > n) || (!isLessThanN && nchr < n) {
+		return nil
+	}
+
+	if isLessThanN {
+		return IMatch{str, index, index + min(nchr, n)}
+	}
+
 	return IMatch{str, index, index + P.nchrs}
 }
 
 func P(n int) Pattern {
 	return Nchars{n}
+}
+
+//==============================================================================
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
+
+func min(a int, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

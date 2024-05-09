@@ -5,19 +5,60 @@ import (
 	"testing"
 )
 
-func TestAdd(t *testing.T) {
+func expect_match(t *testing.T, m gopeg.Match, expected_str string, expected_start int, expected_end int, expr string) {
+	if m == nil {
+		t.Errorf("Match expected for `%s.Match()`. Got nil.", expr)
+		return
+	}
+	str := m.GetValue()
+	if str != expected_str {
+		t.Errorf("For `%s.GetValue()` '%s' was expected. Got '%s'", expr, expected_str, str)
+	}
+	start := m.Start()
+	if start != expected_start {
+		t.Errorf("For `%s.Start()`, %d was expected. Got %d", expr, expected_start, start)
+	}
+	end := m.End()
+	if end != expected_end {
+		t.Errorf("For `%s.End()`, %d was expected. Got %d", expr, expected_end, end)
+	}
+}
+
+func TestPn_pass(t *testing.T) {
+	// Test P(2) match that gets two characters
 	p := gopeg.P(2)
 	m := p.Match("test", 0)
-	if m == nil {
-		t.Errorf("Match expected for P(2)")
-	} else {
-		val := m.GetValue()
-		if val != "te" {
-			t.Errorf("For P(2).match('test', 0) 'te' was expected. Got '%s'", val)
-		}
+	expect_match(t, m, "te", 0, 2, "P(2).Match('test', 0)")
+}
+
+func TestPn_fail(t *testing.T) {
+	// Test P(n) match where too few characters are left
+	p := gopeg.P(2)
+	m := p.Match("str", 2)
+	if m != nil {
+		t.Errorf("For `P(2).Match('str',2)` a nil return value is expected")
 	}
-	//expected := 5
-	//if result != expected {
-	//	t.Errorf("Add(2, 3) returned %d, expected %d", result, expected)
-	//}
+}
+
+func TestPn_minus_pass(t *testing.T) {
+	// Test P(-1) that matches the end of the string
+	p := gopeg.P(-1)
+	m := p.Match("str", 3)
+	expect_match(t, m, "", 3, 3, "P(-1).Match('str',3)")
+}
+
+func TestPn_minus_pass2(t *testing.T) {
+	// Test P(-1) that matches the end of the string
+	p := gopeg.P(-4)
+	m := p.Match("str", 0)
+	expect_match(t, m, "str", 0, 3, "P(-4).Match('str', 0)")
+}
+
+func TestPn_minus_fail(t *testing.T) {
+	// Test P(-1) that matches the end of the string
+	p := gopeg.P(-1)
+	m := p.Match("str", 1)
+	if m != nil {
+		t.Errorf("`P(-1).match('str',1)` should return nil. Got %s", m.GetValue())
+	}
 }
