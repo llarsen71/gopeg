@@ -30,6 +30,8 @@ func (match IMatch) End() int {
 
 type Pattern interface {
 	Match(str string, index int) Match
+	Or
+	And
 }
 
 //==============================================================================
@@ -83,8 +85,7 @@ func (P IntPattern) Match(str string, index int) Match {
 	return IMatch{str, index, index + P.nchrs}
 }
 
-//==============================================================================
-
+// ==============================================================================
 type BoolPattern struct {
 	isTrue bool
 }
@@ -101,9 +102,24 @@ func (P BoolPattern) Match(str string, index int) Match {
 	return IMatch{str, index, index}
 }
 
-//==============================================================================
-type Union interface {
+// ==============================================================================
+type FnPattern struct {
+	fn func(string, int) int
 }
+
+func (P FnPattern) Match(str string, index int) Match {
+	if index < 0 || len(str) < index {
+		return nil
+	}
+	i := P.fn(str, index)
+	if i < index || len(str) < i {
+		return nil
+	}
+	return IMatch{str, index, i}
+}
+
+// ==============================================================================
+type Union interface{} // Use for duck typing
 
 func P(val Union) Pattern {
 	switch v := val.(type) {
@@ -113,9 +129,57 @@ func P(val Union) Pattern {
 		return BoolPattern{v}
 	case string:
 		return StringPattern{v}
+	case func(string, int) int:
+		return FnPattern{v}
 	default:
 		return nil
 	}
+	return nil
+}
+
+//==============================================================================
+
+type SPattern struct {
+	set string
+}
+
+func (P SPattern) Match(str string, index int) Match {
+	if index < 0 || len(str) < index {
+		return nil
+	}
+	s := str[index]
+	for i := 0; i < len(P.set); i++ {
+		if P.set[i] == s {
+			return IMatch{str, index, index + 1}
+		}
+	}
+	return nil
+}
+
+func S(str string) Pattern {
+	return SPattern{str}
+}
+
+//==============================================================================
+
+type RPattern struct {
+	from string
+	to   string
+}
+
+func (P RPattern) Match(str string, index int) Match {
+	if index < 0 || len(str) < index {
+		return nil
+	}
+	s := string(str[index])
+	if P.from <= s && s <= P.to {
+		return IMatch{str, index, index + 1}
+	}
+	return nil
+}
+
+func R(str string) Pattern {
+	return RPattern{string(str[0]), string(str[1])}
 }
 
 //==============================================================================
