@@ -255,6 +255,7 @@ func (P OrPattern) Match(str string, index int) Match {
 func Or(u ...Union) Pattern {
 	p := make([]Pattern, len(u))
 	for i := 0; i < len(u); i++ {
+		// TODO: Handle when a Pattern fails
 		p[i] = P(u[i])
 	}
 	return OrPattern{p}
@@ -281,6 +282,7 @@ func (P AndPattern) Match(str string, index int) Match {
 func And(u ...Union) Pattern {
 	p := make([]Pattern, len(u))
 	for i := 0; i < len(u); i++ {
+		// TODO: Handle when a Pattern fails
 		p[i] = P(u[i])
 	}
 	return AndPattern{p}
@@ -302,6 +304,54 @@ func (P NotPattern) Match(str string, index int) Match {
 
 func Not(p Union) Pattern {
 	return NotPattern{P(p)}
+}
+
+//==============================================================================
+
+type RepPattern struct {
+	p Pattern
+	n int
+}
+
+func (P RepPattern) AtLeast(str string, index int) Match {
+	i := index
+	for j := 0; ; j++ {
+		m := P.p.Match(str, i)
+		if m == nil {
+			// We must match at least n values or this fails
+			if j < P.n {
+				return nil
+			}
+			break
+		}
+		i = m.End()
+	}
+	return IMatch{str, index, i}
+}
+
+func (P RepPattern) AtMost(str string, index int) Match {
+	i := index
+	n := -P.n
+	for j := 0; j < n; j++ {
+		mi := P.p.Match(str, i)
+		if mi == nil {
+			break
+		}
+		i = mi.End()
+	}
+	// Always succeeds
+	return IMatch{str, index, i}
+}
+
+func (P RepPattern) Match(str string, index int) Match {
+	if P.n < 0 {
+		return P.AtMost(str, index)
+	}
+	return P.AtLeast(str, index)
+}
+
+func Rep(p Union, n int) Pattern {
+	return RepPattern{P(p), n}
 }
 
 //==============================================================================

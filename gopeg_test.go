@@ -209,3 +209,24 @@ func TestNot(t *testing.T) {
 	m := p.Match("b", 0)
 	expect_match(t, m, "", 0, 0, "Not('a').Match('b',0)")
 }
+
+// ==============================================================================
+func TestRep(t *testing.T) {
+	p := Rep("a", 3)
+	m := p.Match("aaaa", 0)
+	expect_match(t, m, "aaaa", 0, 4, "Rep('a',3).Match('aaaa',0)")
+
+	p = Rep("a", 3)
+	m = p.Match("aa", 0)
+	expect_nil(t, m, "Rep('a',3).Match('aa',0)")
+
+	p = Rep("a", -3)
+	m = p.Match("aaaa", 0)
+	expect_match(t, m, "aaa", 0, 3, "Rep('a',-3).Match('aaa',0)")
+
+	m = p.Match("a", 0)
+	expect_match(t, m, "a", 0, 1, "Rep('a',-3).Match('a',0)")
+
+	m = p.Match("b", 0)
+	expect_match(t, m, "", 0, 0, "Rep('b',-3).Match('a',0)")
+}
