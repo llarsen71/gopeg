@@ -46,12 +46,49 @@ func (match IMatch) End() int {
 
 type Pattern interface {
 	Match(str string, index int) Match
+	Or(...Union) Pattern
+	And(...Union) Pattern
+}
+
+type BasePattern struct {
+	self Pattern
+}
+
+func (P BasePattern) Match(str string, index int) Match {
+	return nil
+}
+
+func Unionize(u0 Union, u []Union) []Union {
+	U := make([]Union, len(u)+1)
+	U[0] = u0
+	for i := 1; i < len(U); i++ {
+		U[i] = u[i-1]
+	}
+	return U
+}
+
+func (P BasePattern) Or(p ...Union) Pattern {
+	u := Unionize(P.self, p)
+	return Or(u...)
+}
+
+func (P BasePattern) And(p ...Union) Pattern {
+	u := Unionize(P.self, p)
+	return And(u...)
 }
 
 //==============================================================================
 
 type StringPattern struct {
+	BasePattern
 	str string
+}
+
+func newStringPattern(str string) Pattern {
+	P := new(StringPattern)
+	P.self = P
+	P.str = str
+	return P
 }
 
 func (P StringPattern) Match(str string, index int) Match {
@@ -72,7 +109,15 @@ func (P StringPattern) Match(str string, index int) Match {
 //==============================================================================
 
 type IntPattern struct {
+	BasePattern
 	nchrs int
+}
+
+func newIntPattern(n int) Pattern {
+	P := new(IntPattern)
+	P.self = P
+	P.nchrs = n
+	return P
 }
 
 func (P IntPattern) Match(str string, index int) Match {
@@ -101,7 +146,15 @@ func (P IntPattern) Match(str string, index int) Match {
 
 // ==============================================================================
 type BoolPattern struct {
+	BasePattern
 	isTrue bool
+}
+
+func newBoolPattern(isTrue bool) Pattern {
+	P := new(BoolPattern)
+	P.self = P
+	P.isTrue = isTrue
+	return P
 }
 
 func (P BoolPattern) Match(str string, index int) Match {
@@ -118,7 +171,15 @@ func (P BoolPattern) Match(str string, index int) Match {
 
 // ==============================================================================
 type FnPattern struct {
+	BasePattern
 	fn func(string, int) int
+}
+
+func newFnPattern(fn func(string, int) int) Pattern {
+	P := new(FnPattern)
+	P.self = P
+	P.fn = fn
+	return P
 }
 
 func (P FnPattern) Match(str string, index int) Match {
@@ -138,13 +199,13 @@ type Union interface{} // Use for duck typing
 func P(val Union) Pattern {
 	switch v := val.(type) {
 	case int:
-		return IntPattern{v}
+		return newIntPattern(v)
 	case bool:
-		return BoolPattern{v}
+		return newBoolPattern(v)
 	case string:
-		return StringPattern{v}
+		return newStringPattern(v)
 	case func(string, int) int:
-		return FnPattern{v}
+		return newFnPattern(v)
 	case Pattern:
 		return v
 	default:
@@ -156,6 +217,7 @@ func P(val Union) Pattern {
 //==============================================================================
 
 type SPattern struct {
+	BasePattern
 	set string
 }
 
@@ -172,13 +234,17 @@ func (P SPattern) Match(str string, index int) Match {
 	return nil
 }
 
-func S(str string) Pattern {
-	return SPattern{str}
+func S(set string) Pattern {
+	P := new(SPattern)
+	P.self = P
+	P.set = set
+	return P
 }
 
 //==============================================================================
 
 type RPattern struct {
+	BasePattern
 	from string
 	to   string
 }
@@ -195,7 +261,11 @@ func (P RPattern) Match(str string, index int) Match {
 }
 
 func R(str string) Pattern {
-	return RPattern{string(str[0]), string(str[1])}
+	P := new(RPattern)
+	P.self = P
+	P.from = string(str[0])
+	P.to = string(str[1])
+	return P
 }
 
 //==============================================================================
@@ -218,7 +288,7 @@ func SOL() Pattern {
 		return -1
 	}
 
-	p := FnPattern{fn}
+	p := FnPattern{BasePattern{}, fn}
 	return p
 }
 
@@ -245,13 +315,14 @@ func EOL() Pattern {
 		return -1
 	}
 
-	p := FnPattern{fn}
+	p := FnPattern{BasePattern{}, fn}
 	return p
 }
 
 //==============================================================================
 
 type OrPattern struct {
+	BasePattern
 	p []Pattern
 }
 
@@ -274,12 +345,16 @@ func Or(u ...Union) Pattern {
 		// TODO: Handle when a Pattern fails
 		p[i] = P(u[i])
 	}
-	return OrPattern{p}
+	P := new(OrPattern)
+	P.self = P
+	P.p = p
+	return P
 }
 
 //==============================================================================
 
 type AndPattern struct {
+	BasePattern
 	p []Pattern
 }
 
@@ -301,12 +376,17 @@ func And(u ...Union) Pattern {
 		// TODO: Handle when a Pattern fails
 		p[i] = P(u[i])
 	}
-	return AndPattern{p}
+
+	P := new(AndPattern)
+	P.self = P
+	P.p = p
+	return P
 }
 
 //==============================================================================
 
 type NotPattern struct {
+	BasePattern
 	p Pattern
 }
 
@@ -319,12 +399,16 @@ func (P NotPattern) Match(str string, index int) Match {
 }
 
 func Not(p Union) Pattern {
-	return NotPattern{P(p)}
+	P_ := new(NotPattern)
+	P_.self = P_
+	P_.p = P(p)
+	return P_
 }
 
 //==============================================================================
 
 type RepPattern struct {
+	BasePattern
 	p Pattern
 	n int
 }
@@ -367,5 +451,9 @@ func (P RepPattern) Match(str string, index int) Match {
 }
 
 func Rep(p Union, n int) Pattern {
-	return RepPattern{P(p), n}
+	P_ := new(RepPattern)
+	P_.self = P_
+	P_.p = P(p)
+	P_.n = n
+	return P_
 }

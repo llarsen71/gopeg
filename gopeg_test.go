@@ -230,3 +230,22 @@ func TestRep(t *testing.T) {
 	m = p.Match("b", 0)
 	expect_match(t, m, "", 0, 0, "Rep('b',-3).Match('a',0)")
 }
+
+// ==============================================================================
+func TestBaseOr(t *testing.T) {
+	p := P("a").Or("b")
+	m := p.Match("b", 0)
+	expect_match(t, m, "b", 0, 1, "P('a').Or('b').Match('b',0)")
+	m = p.Match("a", 0)
+	expect_match(t, m, "a", 0, 1, "P('a').Or('b').Match('a',0)")
+	m = p.Match("c", 0)
+	expect_nil(t, m, "P('a').Or('b').Match('c',0)")
+}
+
+func TestBaseAnd(t *testing.T) {
+	p := P("a").And("b", 1)
+	m := p.Match("abc", 0)
+	expect_match(t, m, "abc", 0, 3, "P('a').And('b',1).Match('abc',0)")
+	m = p.Match("ab", 0)
+	expect_nil(t, m, "P('a').And('b',1).Match('ab',0)")
+}
