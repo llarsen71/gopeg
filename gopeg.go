@@ -236,43 +236,54 @@ func EOL() Pattern {
 //==============================================================================
 
 type OrPattern struct {
-	a Pattern
-	b Pattern
+	p []Pattern
 }
 
 func (P OrPattern) Match(str string, index int) Match {
-	m := P.a.Match(str, index)
-	if m != nil {
-		return m
+	// Loop over the orred patterns and return the first Match
+	for i := 0; i < len(P.p); i++ {
+		m := P.p[i].Match(str, index)
+		if m != nil {
+			return m
+		}
 	}
-	return P.b.Match(str, index)
+
+	// No matches
+	return nil
 }
 
-func Or(a, b Union) Pattern {
-	return OrPattern{P(a), P(b)}
+func Or(u ...Union) Pattern {
+	p := make([]Pattern, len(u))
+	for i := 0; i < len(u); i++ {
+		p[i] = P(u[i])
+	}
+	return OrPattern{p}
 }
 
 //==============================================================================
 
 type AndPattern struct {
-	a Pattern
-	b Pattern
+	p []Pattern
 }
 
 func (P AndPattern) Match(str string, index int) Match {
-	m1 := P.a.Match(str, index)
-	if m1 == nil {
-		return nil
+	var i int = index
+	for k := 0; k < len(P.p); k++ {
+		m := P.p[k].Match(str, i)
+		if m == nil {
+			return nil
+		}
+		i = m.End()
 	}
-	m2 := P.b.Match(str, m1.End())
-	if m2 == nil {
-		return nil
-	}
-	return IMatch{str, m1.Start(), m2.End()}
+	return IMatch{str, index, i}
 }
 
-func And(a, b Union) Pattern {
-	return AndPattern{P(a), P(b)}
+func And(u ...Union) Pattern {
+	p := make([]Pattern, len(u))
+	for i := 0; i < len(u); i++ {
+		p[i] = P(u[i])
+	}
+	return AndPattern{p}
 }
 
 //==============================================================================
