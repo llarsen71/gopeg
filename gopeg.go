@@ -2,6 +2,22 @@ package gopeg
 
 //==============================================================================
 
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
+
+func min(a int, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+//==============================================================================
+
 type Match interface {
 	GetValue() string
 	Start() int
@@ -352,20 +368,4 @@ func (P RepPattern) Match(str string, index int) Match {
 
 func Rep(p Union, n int) Pattern {
 	return RepPattern{P(p), n}
-}
-
-//==============================================================================
-
-func abs(n int) int {
-	if n < 0 {
-		return -n
-	}
-	return n
-}
-
-func min(a int, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
