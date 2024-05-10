@@ -191,10 +191,37 @@ func SOL() Pattern {
 			return 0
 		}
 		s := string(str[i-1])
+		if s == "\n" {
+			return i
+		}
+		if s == "\r" && string(str[i]) != "\n" {
+			return i
+		}
+		return -1
+	}
+
+	p := FnPattern{fn}
+	return p
+}
+
+//==============================================================================
+
+func EOL() Pattern {
+	fn := func(str string, i int) int {
+		if i < 0 || len(str) < i {
+			return -1
+		}
+		if i == len(str) {
+			return i
+		}
+		if i == 0 {
+			return -1
+		}
+		s := string(str[i])
 		if s == "\r" {
 			return i
 		}
-		if s == "\n" && string(str[i]) != "\r" {
+		if s == "\n" && string(str[i-1]) != "\r" {
 			return i
 		}
 		return -1

@@ -154,6 +154,31 @@ func TestR(t *testing.T) {
 // ==============================================================================
 func TestSOL(t *testing.T) {
 	p := SOL()
+	check_bounds(t, p)
 	m := p.Match("test", 0)
 	expect_match(t, m, "", 0, 0, "SOL().Match('test',0)")
+	m = p.Match("test", 1)
+	expect_nil(t, m, "SOL().Match('test',1)")
+	m = p.Match("test\n123", 5)
+	expect_match(t, m, "", 5, 5, "SOL().Match('test\\n123',5)")
+	m = p.Match("test\r123", 5)
+	expect_match(t, m, "", 5, 5, "SOL().Match('test\\r123',5)")
+	m = p.Match("test\r\n123", 5)
+	expect_nil(t, m, "SOL().Match('test\\r\\n123',5)")
+}
+
+// ==============================================================================
+func TestEOL(t *testing.T) {
+	p := EOL()
+	check_bounds(t, p)
+	m := p.Match("test", 4)
+	expect_match(t, m, "", 4, 4, "EOL().Match('test',4)")
+	m = p.Match("test", 0)
+	expect_nil(t, m, "EOL().Match('test',0)")
+	m = p.Match("test\n123", 4)
+	expect_match(t, m, "", 4, 4, "EOL().Match('test\\n123',4)")
+	m = p.Match("test\r\n123", 4)
+	expect_match(t, m, "", 4, 4, "EOL().Match('test\\r\\n123',4)")
+	m = p.Match("test\r\n123", 5)
+	expect_nil(t, m, "EOL().Match('test\\r\\n123',5)")
 }
