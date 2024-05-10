@@ -150,3 +150,10 @@ func TestR(t *testing.T) {
 	m = p.Match("aAbz", 1)
 	expect_nil(t, m, "R('az').Match('aAbz',1)")
 }
+
+// ==============================================================================
+func TestSOL(t *testing.T) {
+	p := SOL()
+	m := p.Match("test", 0)
+	expect_match(t, m, "", 0, 0, "SOL().Match('test',0)")
+}

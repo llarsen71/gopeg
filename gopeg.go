@@ -30,8 +30,6 @@ func (match IMatch) End() int {
 
 type Pattern interface {
 	Match(str string, index int) Match
-	Or
-	And
 }
 
 //==============================================================================
@@ -180,6 +178,30 @@ func (P RPattern) Match(str string, index int) Match {
 
 func R(str string) Pattern {
 	return RPattern{string(str[0]), string(str[1])}
+}
+
+//==============================================================================
+
+func SOL() Pattern {
+	fn := func(str string, i int) int {
+		if i < 0 || len(str) <= i {
+			return -1
+		}
+		if i == 0 {
+			return 0
+		}
+		s := string(str[i-1])
+		if s == "\r" {
+			return i
+		}
+		if s == "\n" && string(str[i]) != "\r" {
+			return i
+		}
+		return -1
+	}
+
+	p := FnPattern{fn}
+	return p
 }
 
 //==============================================================================
