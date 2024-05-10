@@ -77,6 +77,27 @@ func (P BasePattern) And(p ...Union) Pattern {
 	return And(u...)
 }
 
+// ==============================================================================
+type Union interface{} // Use for duck typing
+
+func P(val Union) Pattern {
+	switch v := val.(type) {
+	case int:
+		return newIntPattern(v)
+	case bool:
+		return newBoolPattern(v)
+	case string:
+		return newStringPattern(v)
+	case func(string, int) int:
+		return newFnPattern(v)
+	case Pattern:
+		return v
+	default:
+		return nil
+	}
+	return nil
+}
+
 //==============================================================================
 
 type StringPattern struct {
@@ -191,27 +212,6 @@ func (P FnPattern) Match(str string, index int) Match {
 		return nil
 	}
 	return IMatch{str, index, i}
-}
-
-// ==============================================================================
-type Union interface{} // Use for duck typing
-
-func P(val Union) Pattern {
-	switch v := val.(type) {
-	case int:
-		return newIntPattern(v)
-	case bool:
-		return newBoolPattern(v)
-	case string:
-		return newStringPattern(v)
-	case func(string, int) int:
-		return newFnPattern(v)
-	case Pattern:
-		return v
-	default:
-		return nil
-	}
-	return nil
 }
 
 //==============================================================================
