@@ -129,6 +129,8 @@ func P(val Union) Pattern {
 		return StringPattern{v}
 	case func(string, int) int:
 		return FnPattern{v}
+	case Pattern:
+		return v
 	default:
 		return nil
 	}
@@ -229,6 +231,66 @@ func EOL() Pattern {
 
 	p := FnPattern{fn}
 	return p
+}
+
+//==============================================================================
+
+type OrPattern struct {
+	a Pattern
+	b Pattern
+}
+
+func (P OrPattern) Match(str string, index int) Match {
+	m := P.a.Match(str, index)
+	if m != nil {
+		return m
+	}
+	return P.b.Match(str, index)
+}
+
+func Or(a, b Union) Pattern {
+	return OrPattern{P(a), P(b)}
+}
+
+//==============================================================================
+
+type AndPattern struct {
+	a Pattern
+	b Pattern
+}
+
+func (P AndPattern) Match(str string, index int) Match {
+	m1 := P.a.Match(str, index)
+	if m1 == nil {
+		return nil
+	}
+	m2 := P.b.Match(str, m1.End())
+	if m2 == nil {
+		return nil
+	}
+	return IMatch{str, m1.Start(), m2.End()}
+}
+
+func And(a, b Union) Pattern {
+	return AndPattern{P(a), P(b)}
+}
+
+//==============================================================================
+
+type NotPattern struct {
+	p Pattern
+}
+
+func (P NotPattern) Match(str string, index int) Match {
+	m := P.p.Match(str, index)
+	if m != nil {
+		return nil
+	}
+	return IMatch{str, index, index}
+}
+
+func Not(p Union) Pattern {
+	return NotPattern{P(p)}
 }
 
 //==============================================================================

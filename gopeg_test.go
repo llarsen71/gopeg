@@ -182,3 +182,30 @@ func TestEOL(t *testing.T) {
 	m = p.Match("test\r\n123", 5)
 	expect_nil(t, m, "EOL().Match('test\\r\\n123',5)")
 }
+
+// ==============================================================================
+func TestOr(t *testing.T) {
+	p := Or("test1", "test2")
+	m := p.Match("test1", 0)
+	expect_match(t, m, "test1", 0, 5, "Or(P('test1'),P('test2')).Match('test1',0)")
+	m = p.Match("test2", 0)
+	expect_match(t, m, "test2", 0, 5, "Or(P('test1'),P('test2')).Match('test2',0)")
+	m = p.Match("test", 0)
+	expect_nil(t, m, "Or(P('test1'),P('test2')).Match('test',0)")
+}
+
+// ==============================================================================
+func TestAnd(t *testing.T) {
+	p := And("a", "b")
+	m := p.Match("ab", 0)
+	expect_match(t, m, "ab", 0, 2, "And(P('a'),P('b')).Match('ab',0)")
+	m = p.Match("ba", 0)
+	expect_nil(t, m, "And(P('a'),P('b')).Match('ba',0)")
+}
+
+// ==============================================================================
+func TestNot(t *testing.T) {
+	p := Not("a")
+	m := p.Match("b", 0)
+	expect_match(t, m, "", 0, 0, "Not('a').Match('b',0)")
+}
