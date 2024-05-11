@@ -232,7 +232,7 @@ type SPattern struct {
 }
 
 func (P SPattern) Match(str string, index int) Match {
-	if index < 0 || len(str) < index {
+	if index < 0 || len(str)-1 < index {
 		return nil
 	}
 	s := str[index]
@@ -276,7 +276,7 @@ type RPattern struct {
 //------------------------------------------------------------------------------
 
 func (P RPattern) Match(str string, index int) Match {
-	if index < 0 || len(str) < index {
+	if index < 0 || len(str)-1 < index {
 		return nil
 	}
 	for _, R := range P.rng {
@@ -491,10 +491,10 @@ func Rep(p Union, n int) Pattern {
 
 //==============================================================================
 
-var whitespace1 Pattern = S(" \t")
-var whitespace0 Pattern = Rep(whitespace1, 0)
-var whitespace Pattern = Rep(whitespace1, 1)
-var alpha Pattern = R("az", "AZ")
-var digit Pattern = R("09")
-var newline Pattern = Or("\r\n", "\r", "\n")
-var quote Pattern = P(`"'`)
+var Whitespace Pattern = S(" \t")
+var Whitespace0 Pattern = Rep(Whitespace, 0)
+var Whitespace1 Pattern = Rep(Whitespace, 1)
+var Alpha Pattern = R("az", "AZ")
+var Digit Pattern = R("09")
+var Newline Pattern = Or("\r\n", "\r", "\n")
+var Quote Pattern = S(`"'`)

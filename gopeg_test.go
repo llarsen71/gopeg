@@ -257,3 +257,47 @@ func TestBaseNot(t *testing.T) {
 }
 
 // ==============================================================================
+
+func TestWhitespace(t *testing.T) {
+	ws := Whitespace
+	m := ws.Match("  ", 0)
+	expect_match(t, m, " ", 0, 1, `ws.Match("  ",0)`)
+	ws1 := Whitespace1
+	m = ws1.Match("  ", 0)
+	expect_match(t, m, "  ", 0, 2, `ws1.Match("  ",0)`)
+	m = ws1.Match("", 0)
+	expect_nil(t, m, `ws1.Match("",0)`)
+	ws0 := Whitespace0
+	m = ws0.Match("", 0)
+	expect_match(t, m, "", 0, 0, `ws1.Match("",0)`)
+}
+
+func TestAlpha(t *testing.T) {
+	m := Alpha.Match("a0W", 0)
+	expect_match(t, m, "a", 0, 1, `Alpha.Match("a0W",0)`)
+	m = Alpha.Match("a0", 1)
+	expect_nil(t, m, `Alpha.Match("a0W",1)`)
+	m = Alpha.Match("a0W", 2)
+	expect_match(t, m, "W", 2, 3, `Alpha.Match("a0W",2)`)
+}
+
+func TestDigit(t *testing.T) {
+	nl := Newline
+	m := nl.Match("\r\n", 0)
+	expect_match(t, m, "\r\n", 0, 2, `nl.Match("\r\n",0)`)
+	m = nl.Match("\r\n", 1)
+	expect_match(t, m, "\n", 1, 2, `nl.Match("\r\n",1)`)
+	m = nl.Match("\r", 0)
+	expect_match(t, m, "\r", 0, 1, `nl.Match("\r",0)`)
+	m = nl.Match("a", 0)
+	expect_nil(t, m, `nl.Match("a",0)`)
+}
+
+func TestQuote(t *testing.T) {
+	m := Quote.Match("'", 0)
+	expect_match(t, m, "'", 0, 1, `Quote.Match("'",0)`)
+	m = Quote.Match(`"`, 0)
+	expect_match(t, m, `"`, 0, 1, `Quote.Match('"',0)`)
+	m = Quote.Match(` `, 0)
+	expect_nil(t, m, `Quote.Match(' ',0)`)
+}
