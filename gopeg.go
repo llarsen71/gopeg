@@ -491,6 +491,10 @@ func Rep(p Union, n int) Pattern {
 
 //==============================================================================
 
-//var whitespace1 Pattern = S(" \t")
-//var whitespace0 Pattern = Rep(whitespace1, 0)
-//var whitespace Pattern = Rep(whitespace, 1)
+var whitespace1 Pattern = S(" \t")
+var whitespace0 Pattern = Rep(whitespace1, 0)
+var whitespace Pattern = Rep(whitespace1, 1)
+var alpha Pattern = R("az", "AZ")
+var digit Pattern = R("09")
+var newline Pattern = Or("\r\n", "\r", "\n")
+var quote Pattern = P(`"'`)
