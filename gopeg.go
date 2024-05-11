@@ -48,6 +48,8 @@ type Pattern interface {
 	Match(str string, index int) Match
 	Or(...Union) Pattern
 	And(...Union) Pattern
+	Not(Union) Pattern
+	Rep(int) Pattern
 }
 
 type BasePattern struct {
@@ -75,6 +77,14 @@ func (P BasePattern) Or(p ...Union) Pattern {
 func (P BasePattern) And(p ...Union) Pattern {
 	u := Unionize(P.self, p)
 	return And(u...)
+}
+
+func (P BasePattern) Not(u Union) Pattern {
+	return And(P.self, Not(u))
+}
+
+func (P BasePattern) Rep(n int) Pattern {
+	return Rep(P.self, n)
 }
 
 // ==============================================================================
@@ -243,28 +253,49 @@ func S(set string) Pattern {
 
 //==============================================================================
 
-type RPattern struct {
-	BasePattern
+type Range struct {
 	from string
 	to   string
 }
+
+func (R Range) inRange(str string, index int) bool {
+	s := string(str[index])
+	return R.from <= s && s <= R.to
+}
+
+func newRange(str string) Range {
+	R := Range{string(str[0]), string(str[1])}
+	return R
+}
+
+type RPattern struct {
+	BasePattern
+	rng []Range
+}
+
+//------------------------------------------------------------------------------
 
 func (P RPattern) Match(str string, index int) Match {
 	if index < 0 || len(str) < index {
 		return nil
 	}
-	s := string(str[index])
-	if P.from <= s && s <= P.to {
-		return IMatch{str, index, index + 1}
+	for _, R := range P.rng {
+		if R.inRange(str, index) {
+			return IMatch{str, index, index + 1}
+		}
 	}
 	return nil
 }
 
-func R(str string) Pattern {
+func R(strs ...string) Pattern {
+	R := make([]Range, len(strs))
+	for i := 0; i < len(R); i++ {
+		R[i] = newRange(strs[i])
+	}
+
 	P := new(RPattern)
 	P.self = P
-	P.from = string(str[0])
-	P.to = string(str[1])
+	P.rng = R
 	return P
 }
 
@@ -457,3 +488,9 @@ func Rep(p Union, n int) Pattern {
 	P_.n = n
 	return P_
 }
+
+//==============================================================================
+
+//var whitespace1 Pattern = S(" \t")
+//var whitespace0 Pattern = Rep(whitespace1, 0)
+//var whitespace Pattern = Rep(whitespace, 1)
