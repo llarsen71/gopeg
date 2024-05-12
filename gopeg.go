@@ -1,3 +1,4 @@
+// nolint:all
 package gopeg
 
 //==============================================================================
@@ -487,6 +488,36 @@ func Rep(p Union, n int) Pattern {
 	P_.p = P(p)
 	P_.n = n
 	return P_
+}
+
+//==============================================================================
+
+type PatternRef interface {
+	SetPattern(p Pattern)
+}
+
+type VPattern struct {
+	BasePattern
+	ref string
+	p   Pattern
+}
+
+func (P *VPattern) Match(str string, index int) Match {
+	if P.p == nil {
+		return nil
+	}
+	return P.p.Match(str, index)
+}
+
+func (P *VPattern) SetPattern(p Pattern) {
+	P.p = p
+}
+
+func V(ref string) Pattern {
+	P := new(VPattern)
+	P.ref = ref
+	P.self = P
+	return P
 }
 
 //==============================================================================

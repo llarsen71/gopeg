@@ -258,6 +258,21 @@ func TestBaseNot(t *testing.T) {
 
 // ==============================================================================
 
+func TestV(t *testing.T) {
+	p := V("test")
+	m := p.Match("a", 0)
+	expect_nil(t, m, `V("test").Match("a",0)`)
+	if v, ok := p.(PatternRef); ok {
+		v.SetPattern(P("a"))
+		m = p.Match("a", 0)
+		expect_match(t, m, "a", 0, 1, `V("test").Match("a",0)`)
+	} else {
+		t.Error("Expected V pattern to implement PatternRef")
+	}
+}
+
+// ==============================================================================
+
 func TestWhitespace(t *testing.T) {
 	ws := Whitespace
 	m := ws.Match("  ", 0)
