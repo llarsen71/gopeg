@@ -57,10 +57,6 @@ type BasePattern struct {
 	self Pattern
 }
 
-func (P BasePattern) Match(str string, index int) Match {
-	return nil
-}
-
 func Unionize(u0 Union, u []Union) []Union {
 	U := make([]Union, len(u)+1)
 	U[0] = u0
@@ -70,21 +66,25 @@ func Unionize(u0 Union, u []Union) []Union {
 	return U
 }
 
-func (P BasePattern) Or(p ...Union) Pattern {
+func (P *BasePattern) Match(str string, index int) Match {
+	return nil
+}
+
+func (P *BasePattern) Or(p ...Union) Pattern {
 	u := Unionize(P.self, p)
 	return Or(u...)
 }
 
-func (P BasePattern) And(p ...Union) Pattern {
+func (P *BasePattern) And(p ...Union) Pattern {
 	u := Unionize(P.self, p)
 	return And(u...)
 }
 
-func (P BasePattern) Not(u Union) Pattern {
+func (P *BasePattern) Not(u Union) Pattern {
 	return And(P.self, Not(u))
 }
 
-func (P BasePattern) Rep(n int) Pattern {
+func (P *BasePattern) Rep(n int) Pattern {
 	return Rep(P.self, n)
 }
 
@@ -123,7 +123,7 @@ func newStringPattern(str string) Pattern {
 	return P
 }
 
-func (P StringPattern) Match(str string, index int) Match {
+func (P *StringPattern) Match(str string, index int) Match {
 	// Index is out of bounds of the string
 	if index < 0 || len(str) < index {
 		return nil
@@ -152,7 +152,7 @@ func newIntPattern(n int) Pattern {
 	return P
 }
 
-func (P IntPattern) Match(str string, index int) Match {
+func (P *IntPattern) Match(str string, index int) Match {
 	// Index is out of bounds of the string
 	if index < 0 || len(str) < index {
 		return nil
@@ -189,7 +189,7 @@ func newBoolPattern(isTrue bool) Pattern {
 	return P
 }
 
-func (P BoolPattern) Match(str string, index int) Match {
+func (P *BoolPattern) Match(str string, index int) Match {
 	// Index is out of bounds of the string
 	if index < 0 || len(str) < index {
 		return nil
@@ -214,7 +214,7 @@ func newFnPattern(fn func(string, int) int) Pattern {
 	return P
 }
 
-func (P FnPattern) Match(str string, index int) Match {
+func (P *FnPattern) Match(str string, index int) Match {
 	if index < 0 || len(str) < index {
 		return nil
 	}
@@ -232,7 +232,7 @@ type SPattern struct {
 	set string
 }
 
-func (P SPattern) Match(str string, index int) Match {
+func (P *SPattern) Match(str string, index int) Match {
 	if index < 0 || len(str)-1 < index {
 		return nil
 	}
@@ -259,7 +259,7 @@ type Range struct {
 	to   string
 }
 
-func (R Range) inRange(str string, index int) bool {
+func (R *Range) inRange(str string, index int) bool {
 	s := string(str[index])
 	return R.from <= s && s <= R.to
 }
@@ -276,7 +276,7 @@ type RPattern struct {
 
 //------------------------------------------------------------------------------
 
-func (P RPattern) Match(str string, index int) Match {
+func (P *RPattern) Match(str string, index int) Match {
 	if index < 0 || len(str)-1 < index {
 		return nil
 	}
@@ -320,7 +320,7 @@ func SOL() Pattern {
 		return -1
 	}
 
-	p := FnPattern{BasePattern{}, fn}
+	p := newFnPattern(fn)
 	return p
 }
 
@@ -347,7 +347,7 @@ func EOL() Pattern {
 		return -1
 	}
 
-	p := FnPattern{BasePattern{}, fn}
+	p := newFnPattern(fn)
 	return p
 }
 
@@ -358,7 +358,7 @@ type OrPattern struct {
 	p []Pattern
 }
 
-func (P OrPattern) Match(str string, index int) Match {
+func (P *OrPattern) Match(str string, index int) Match {
 	// Loop over the orred patterns and return the first Match
 	for i := 0; i < len(P.p); i++ {
 		m := P.p[i].Match(str, index)
@@ -390,7 +390,7 @@ type AndPattern struct {
 	p []Pattern
 }
 
-func (P AndPattern) Match(str string, index int) Match {
+func (P *AndPattern) Match(str string, index int) Match {
 	var i int = index
 	for k := 0; k < len(P.p); k++ {
 		m := P.p[k].Match(str, i)
@@ -422,7 +422,7 @@ type NotPattern struct {
 	p Pattern
 }
 
-func (P NotPattern) Match(str string, index int) Match {
+func (P *NotPattern) Match(str string, index int) Match {
 	m := P.p.Match(str, index)
 	if m != nil {
 		return nil
@@ -445,7 +445,7 @@ type RepPattern struct {
 	n int
 }
 
-func (P RepPattern) AtLeast(str string, index int) Match {
+func (P *RepPattern) AtLeast(str string, index int) Match {
 	i := index
 	for j := 0; ; j++ {
 		m := P.p.Match(str, i)
@@ -461,7 +461,7 @@ func (P RepPattern) AtLeast(str string, index int) Match {
 	return &IMatch{str, index, i}
 }
 
-func (P RepPattern) AtMost(str string, index int) Match {
+func (P *RepPattern) AtMost(str string, index int) Match {
 	i := index
 	n := -P.n
 	for j := 0; j < n; j++ {
@@ -475,7 +475,7 @@ func (P RepPattern) AtMost(str string, index int) Match {
 	return &IMatch{str, index, i}
 }
 
-func (P RepPattern) Match(str string, index int) Match {
+func (P *RepPattern) Match(str string, index int) Match {
 	if P.n < 0 {
 		return P.AtMost(str, index)
 	}
