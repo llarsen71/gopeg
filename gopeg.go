@@ -25,21 +25,29 @@ type Match interface {
 	End() int
 }
 
-type IMatch struct {
+type MatchObject struct {
 	full   string
 	start_ int
 	end_   int
 }
 
-func (match *IMatch) GetValue() string {
+func newMatch(full string, start int, end int) Match {
+	match := new(MatchObject)
+	match.full = full
+	match.start_ = start
+	match.end_ = end
+	return match
+}
+
+func (match *MatchObject) GetValue() string {
 	return match.full[match.start_:match.end_]
 }
 
-func (match *IMatch) Start() int {
+func (match *MatchObject) Start() int {
 	return match.start_
 }
 
-func (match *IMatch) End() int {
+func (match *MatchObject) End() int {
 	return match.end_
 }
 
@@ -135,7 +143,7 @@ func (P *StringPattern) Match(str string, index int) Match {
 		return nil
 	}
 
-	return &IMatch{str, index, index + sz}
+	return newMatch(str, index, index+sz)
 }
 
 //==============================================================================
@@ -170,10 +178,10 @@ func (P *IntPattern) Match(str string, index int) Match {
 	}
 
 	if isLessThanN {
-		return &IMatch{str, index, index + min(nchr, n)}
+		return newMatch(str, index, index+min(nchr, n))
 	}
 
-	return &IMatch{str, index, index + P.nchrs}
+	return newMatch(str, index, index+P.nchrs)
 }
 
 // ==============================================================================
@@ -198,7 +206,7 @@ func (P *BoolPattern) Match(str string, index int) Match {
 		return nil
 	}
 
-	return &IMatch{str, index, index}
+	return newMatch(str, index, index)
 }
 
 // ==============================================================================
@@ -222,7 +230,7 @@ func (P *FnPattern) Match(str string, index int) Match {
 	if i < index || len(str) < i {
 		return nil
 	}
-	return &IMatch{str, index, i}
+	return newMatch(str, index, i)
 }
 
 //==============================================================================
@@ -239,7 +247,7 @@ func (P *SPattern) Match(str string, index int) Match {
 	s := str[index]
 	for i := 0; i < len(P.set); i++ {
 		if P.set[i] == s {
-			return &IMatch{str, index, index + 1}
+			return newMatch(str, index, index+1)
 		}
 	}
 	return nil
@@ -282,7 +290,7 @@ func (P *RPattern) Match(str string, index int) Match {
 	}
 	for _, R := range P.rng {
 		if R.inRange(str, index) {
-			return &IMatch{str, index, index + 1}
+			return newMatch(str, index, index+1)
 		}
 	}
 	return nil
@@ -399,7 +407,7 @@ func (P *AndPattern) Match(str string, index int) Match {
 		}
 		i = m.End()
 	}
-	return &IMatch{str, index, i}
+	return newMatch(str, index, i)
 }
 
 func And(u ...Union) Pattern {
@@ -427,7 +435,7 @@ func (P *NotPattern) Match(str string, index int) Match {
 	if m != nil {
 		return nil
 	}
-	return &IMatch{str, index, index}
+	return newMatch(str, index, index)
 }
 
 func Not(p Union) Pattern {
@@ -458,7 +466,7 @@ func (P *RepPattern) AtLeast(str string, index int) Match {
 		}
 		i = m.End()
 	}
-	return &IMatch{str, index, i}
+	return newMatch(str, index, i)
 }
 
 func (P *RepPattern) AtMost(str string, index int) Match {
@@ -472,7 +480,7 @@ func (P *RepPattern) AtMost(str string, index int) Match {
 		i = mi.End()
 	}
 	// Always succeeds
-	return &IMatch{str, index, i}
+	return newMatch(str, index, i)
 }
 
 func (P *RepPattern) Match(str string, index int) Match {
