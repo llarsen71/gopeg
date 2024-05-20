@@ -97,7 +97,10 @@ func (P *BasePattern) Rep(n int) Pattern {
 }
 
 // ==============================================================================
-type Union interface{} // Use for duck typing
+// The Union is used to allow the P funtion to accept multiple types. Generics
+// would be useful here, but a Pattern interface is needed as one of the items
+// and this is not accepted by generics.
+type Union interface{}
 
 func P(val Union) Pattern {
 	switch v := val.(type) {
@@ -111,10 +114,8 @@ func P(val Union) Pattern {
 		return newFnPattern(v)
 	case Pattern:
 		return v
-	default:
-		return nil
 	}
-	return nil
+	return newBoolPattern(true)
 }
 
 //==============================================================================
